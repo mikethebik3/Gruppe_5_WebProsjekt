@@ -21,7 +21,7 @@
             padding: 40px;
             background: white;
             border-radius: 8px;
-            margin-top: 20px; /* Just to ensure it doesn't touch the top of the viewport */
+            margin-top: 20px;
         }
         h1 {
             margin-bottom: 20px;
@@ -48,9 +48,8 @@
         <h1>{{ time_of_day }}, {{ fornavn }} {{ etternavn }}!</h1>
         <a href="{{ url_for('logout') }}" class="button">Logg ut</a>
         <a href="{{ url_for('available_books') }}" class="button">Se tilgjengelige bøker til låns</a>
-        <a href="{{ url_for('my_loans') }}" class="button">Se Mine Lån</a>
-        <a href="{{ url_for('innlevering') }}" class="button">Innlevering av bøker og tidsskrifter</a>
+        <a href="{{ url_for('available_magazines') }}" class="button">Se Tilgjengelige Tidsskrifter</a>
+        <a href="{{ url_for('innlevering') }}" class="button">Oversikt og innlevering av lån</a>
     </div>
 </body>
 </html>
-
