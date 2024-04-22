@@ -94,7 +94,7 @@ def login():
 @app.route('/profile')
 @login_required
 def profile():
-    greeting = get_time_of_day()  # Kaller funksjonen for å få hilsen basert på tid på døgnet
+    greeting = get_time_of_day() 
     return render_template('profile.html', time_of_day=greeting, fornavn=current_user.fornavn, etternavn=current_user.etternavn)
 
 
@@ -117,10 +117,9 @@ def available_books():
 def borrow_book():
     isbn = request.form['isbn']
     user_id = current_user.id
-    lån_dato = datetime.datetime.now().date()  # Korrekt bruk av datetime med full referanse
-    retur_dato = lån_dato + datetime.timedelta(days=30)  # Anta 30 dagers lån
+    lån_dato = datetime.datetime.now().date()
+    retur_dato = lån_dato + datetime.timedelta(days=30)
 
-    # Opprett en ny låneoppføring
     nytt_lån = LånteBøker(StudentID=user_id, ISBN=isbn, LånDato=lån_dato, ReturDato=retur_dato, Levert=False)
     db.session.add(nytt_lån)
     db.session.commit()
@@ -128,14 +127,25 @@ def borrow_book():
     flash('Du har nå lånt boken.')
     return redirect(url_for('available_books'))
 
-
-@app.route('/my_loans')
+@app.route('/available_magazines')
 @login_required
-def my_loans():
-    # Hent alle aktive lån for den innloggede brukeren
-    user_loans = LånteBøker.query.filter_by(StudentID=current_user.id, Levert=False).all()
-    return render_template('my_loans.html', loans=user_loans)
+def available_magazines():
+    available_magazines = Tidsskrifter.query.filter(~Tidsskrifter.TidsskriftID.in_(db.session.query(LånteTidsskrifter.TidsskriftID).filter_by(Levert=False))).all()
+    return render_template('available_magazines.html', magazines=available_magazines)
 
+@app.route('/borrow_magazine', methods=['POST'])
+@login_required
+def borrow_magazine():
+    tidsskrift_id = request.form.get('tidsskriftid')
+    lån_dato = datetime.datetime.now().date()
+    retur_dato = lån_dato + datetime.timedelta(days=30)  # Anta 30 dagers lån
+
+    nytt_lån = LånteTidsskrifter(StudentID=current_user.id, TidsskriftID=tidsskrift_id, LånDato=lån_dato, ReturDato=retur_dato, Levert=False)
+    db.session.add(nytt_lån)
+    db.session.commit()
+
+    flash('Du har nå lånt tidsskriftet.')
+    return redirect(url_for('available_magazines'))
 
 class Bøker(db.Model):
     ISBN = db.Column(db.BigInteger, primary_key=True, nullable=False)
@@ -143,7 +153,6 @@ class Bøker(db.Model):
     Forfatter = db.Column(db.String(100), nullable=False)
     Sjanger = db.Column(db.String(100), nullable=False)
 
-    # Definerer relasjonen til LånteBøker
     lånte_bøker = relationship("LånteBøker", back_populates="bok")
 
 
@@ -155,7 +164,7 @@ class LånteBøker(db.Model):
     ReturDato = db.Column(db.Date, nullable=True)
     Levert = db.Column(db.Boolean, nullable=False, default=False)
 
-    # Definerer relasjonen til Bøker
+    
     bok = relationship("Bøker", back_populates="lånte_bøker")
 
 
@@ -165,7 +174,7 @@ class Tidsskrifter(db.Model):
     Utgiver = db.Column(db.String(100), nullable=False)
     Kategori = db.Column(db.String(100), nullable=False)
 
-    # Definerer relasjonen til LånteTidsskrifter
+    
     lånte_tidsskrifter = relationship("LånteTidsskrifter", back_populates="tidsskrift")
 
 
@@ -177,7 +186,7 @@ class LånteTidsskrifter(db.Model):
     ReturDato = db.Column(db.Date, nullable=True)
     Levert = db.Column(db.Boolean, nullable=False, default=False)
 
-    # Definerer relasjonen til Tidsskrifter
+    
     tidsskrift = relationship("Tidsskrifter", back_populates="lånte_tidsskrifter")
 
 @app.route('/innlevering', methods=['GET', 'POST'])
